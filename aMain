@@ -1,6 +1,8 @@
 local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- Создание ScreenGui
+-- ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "aMainHub"
 screenGui.ResetOnSpawn = false
@@ -45,30 +47,10 @@ titleLabel.TextSize = 20
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = titleBar
 
--- Кнопка закрытия (X)
-local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 35, 0, 35)
-closeButton.Position = UDim2.new(1, -40, 0, 2)
-closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.Font = Enum.Font.GothamBold
-closeButton.TextSize = 18
-closeButton.BorderSizePixel = 0
-closeButton.Parent = titleBar
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(1, 0)
-closeCorner.Parent = closeButton
-
-closeButton.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-end)
-
 -- 👀 Кнопка сворачивания
 local collapseButton = Instance.new("TextButton")
 collapseButton.Size = UDim2.new(0, 35, 0, 35)
-collapseButton.Position = UDim2.new(1, -80, 0, 2)
+collapseButton.Position = UDim2.new(1, -40, 0, 2)
 collapseButton.BackgroundColor3 = Color3.fromRGB(50, 50, 200)
 collapseButton.Text = "👀"
 collapseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -78,110 +60,187 @@ collapseButton.BorderSizePixel = 0
 collapseButton.Parent = titleBar
 
 local collapseCorner = Instance.new("UICorner")
-collapseCorner.CornerRadius = UDim.new(0.5, 0) -- squircle стиль
+collapseCorner.CornerRadius = UDim.new(0.5, 0)
 collapseCorner.Parent = collapseButton
 
--- Левая панель (вкладки)
-local tabsFrame = Instance.new("Frame")
-tabsFrame.Size = UDim2.new(0, 120, 1, -40)
-tabsFrame.Position = UDim2.new(0, 0, 0, 40)
-tabsFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-tabsFrame.Parent = mainFrame
+-- Контент
+local buttonY = 50
+local function createButton(text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 200, 0, 40)
+    button.Position = UDim2.new(0, 20, 0, buttonY)
+    button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 16
+    button.BorderSizePixel = 0
+    button.Parent = mainFrame
 
-local tabsCorner = Instance.new("UICorner")
-tabsCorner.CornerRadius = UDim.new(0, 8)
-tabsCorner.Parent = tabsFrame
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0.2, 0)
+    corner.Parent = button
 
--- Правая панель (контент)
-local contentFrame = Instance.new("Frame")
-contentFrame.Size = UDim2.new(1, -120, 1, -40)
-contentFrame.Position = UDim2.new(0, 120, 0, 40)
-contentFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-contentFrame.Parent = mainFrame
+    button.MouseButton1Click:Connect(callback)
 
-local contentCorner = Instance.new("UICorner")
-contentCorner.CornerRadius = UDim.new(0, 8)
-contentCorner.Parent = contentFrame
+    buttonY = buttonY + 50
+end
 
--- Логика сворачивания
-local collapsed = false
+-- ===== 🚀 Функции =====
+local savedPos = nil
+local flyEnabled, noclipEnabled, invisFlingEnabled, wallWalkEnabled, walkFlingEnabled = false, false, false, false, false
 
-collapseButton.MouseButton1Click:Connect(function()
-    collapsed = not collapsed
-    if collapsed then
-        -- Скрываем контент и заголовок
-        tabsFrame.Visible = false
-        contentFrame.Visible = false
-        titleBar.Visible = false
-
-        -- Плавно уменьшаем окно
-        local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-            {Size = UDim2.new(0, 50, 0, 50)})
-        tween:Play()
-
-        -- Добавляем кнопку ♻️ для возврата
-        tween.Completed:Connect(function()
-            local restoreButton = Instance.new("TextButton")
-            restoreButton.Size = UDim2.new(1, 0, 1, 0)
-            restoreButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            restoreButton.Text = "♻️"
-            restoreButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            restoreButton.Font = Enum.Font.GothamBold
-            restoreButton.TextSize = 24
-            restoreButton.Parent = mainFrame
-
-            local restoreCorner = Instance.new("UICorner")
-            restoreCorner.CornerRadius = UDim.new(0.5, 0)
-            restoreCorner.Parent = restoreButton
-
-            -- Перетаскивание за всю кнопку
-            local dragging, dragInput, dragStart, startPos
-
-            local function update(input)
-                local delta = input.Position - dragStart
-                mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                               startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+-- Noclip
+createButton("Noclip", function()
+    noclipEnabled = not noclipEnabled
+    game:GetService("RunService").Stepped:Connect(function()
+        if noclipEnabled then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
             end
+        end
+    end)
+end)
 
-            restoreButton.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                    dragStart = input.Position
-                    startPos = mainFrame.Position
+-- Fly
+createButton("Fly", function()
+    flyEnabled = not flyEnabled
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = Vector3.new(0,0,0)
+    bodyVelocity.MaxForce = Vector3.new(4000,4000,4000)
+    bodyVelocity.Parent = humanoidRootPart
 
-                    input.Changed:Connect(function()
-                        if input.UserInputState == Enum.UserInputState.End then
-                            dragging = false
-                        end
-                    end)
-                end
-            end)
+    local connection
+    connection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not flyEnabled then
+            bodyVelocity:Destroy()
+            connection:Disconnect()
+        else
+            bodyVelocity.Velocity = humanoidRootPart.CFrame.LookVector * 50
+        end
+    end)
+end)
 
-            restoreButton.InputChanged:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                    dragInput = input
-                end
-            end)
+-- Invis Fling
+createButton("InvisFling", function()
+    invisFlingEnabled = not invisFlingEnabled
+    humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, 100, 0)
+    game:GetService("RunService").Heartbeat:Connect(function()
+        if invisFlingEnabled then
+            humanoidRootPart.Velocity = Vector3.new(9999,9999,9999)
+        end
+    end)
+end)
 
-            UserInputService.InputChanged:Connect(function(input)
-                if input == dragInput and dragging then
-                    update(input)
-                end
-            end)
+-- Wallwalk
+createButton("WallWalk", function()
+    wallWalkEnabled = not wallWalkEnabled
+    humanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+    humanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+end)
 
-            restoreButton.MouseButton1Click:Connect(function()
-                restoreButton:Destroy()
-                -- Плавно разворачиваем обратно
-                local expandTween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
-                    {Size = UDim2.new(0, 450, 0, 300)})
-                expandTween:Play()
+-- WalkFling
+createButton("WalkFling", function()
+    walkFlingEnabled = not walkFlingEnabled
+    game:GetService("RunService").Heartbeat:Connect(function()
+        if walkFlingEnabled then
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame + humanoidRootPart.CFrame.LookVector * 5
+        end
+    end)
+end)
 
-                expandTween.Completed:Connect(function()
-                    tabsFrame.Visible = true
-                    contentFrame.Visible = true
-                    titleBar.Visible = true
+-- Save Pos
+createButton("Save Pos", function()
+    savedPos = humanoidRootPart.CFrame
+    print("Position saved!")
+end)
+
+-- TP to Saved Pos
+createButton("TP to Saved Pos", function()
+    if savedPos then
+        humanoidRootPart.CFrame = savedPos
+        print("Teleported to saved position!")
+    else
+        warn("No position saved!")
+    end
+end)
+
+-- ====== Сворачивание в ♻️ ======
+collapseButton.MouseButton1Click:Connect(function()
+    local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+        {Size = UDim2.new(0, 50, 0, 50)})
+    tween:Play()
+
+    tween.Completed:Connect(function()
+        titleBar.Visible = false
+        for _, child in pairs(mainFrame:GetChildren()) do
+            if child:IsA("TextButton") then
+                child.Visible = false
+            end
+        end
+
+        local restoreButton = Instance.new("TextButton")
+        restoreButton.Size = UDim2.new(1, 0, 1, 0)
+        restoreButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        restoreButton.Text = "♻️"
+        restoreButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        restoreButton.Font = Enum.Font.GothamBold
+        restoreButton.TextSize = 24
+        restoreButton.Parent = mainFrame
+
+        local restoreCorner = Instance.new("UICorner")
+        restoreCorner.CornerRadius = UDim.new(0.5, 0)
+        restoreCorner.Parent = restoreButton
+
+        -- Таскание за всю кнопку
+        local dragging, dragInput, dragStart, startPos
+        local function update(input)
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                           startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+
+        restoreButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                dragStart = input.Position
+                startPos = mainFrame.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
                 end)
+            end
+        end)
+
+        restoreButton.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                dragInput = input
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                update(input)
+            end
+        end)
+
+        restoreButton.MouseButton1Click:Connect(function()
+            restoreButton:Destroy()
+            local expandTween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+                {Size = UDim2.new(0, 450, 0, 300)})
+            expandTween:Play()
+
+            expandTween.Completed:Connect(function()
+                titleBar.Visible = true
+                for _, child in pairs(mainFrame:GetChildren()) do
+                    if child:IsA("TextButton") then
+                        child.Visible = true
+                    end
+                end
             end)
         end)
-    end
+    end)
 end)
