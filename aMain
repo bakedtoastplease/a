@@ -1,85 +1,62 @@
-local player = game.Players.LocalPlayer
+-- Загружаем Rayfield UI напрямую с GitHub
+loadstring(game:HttpGet("https://raw.githubusercontent.com/rileybeerblx2/rayfield-ui/main/source.lua"))()
 
--- Создаем ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "aMainUI"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+-- Создаем окно
+local Window = Rayfield:CreateWindow({
+    Name = "🌙 aMain Hub",
+    LoadingTitle = "Загрузка aMain Hub...",
+    LoadingSubtitle = "By Delta x Rayfield",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "aMainHub", -- имя папки для конфигов
+        FileName = "aMainConfig"
+    },
+    Discord = {
+        Enabled = false, -- если не нужен дискорд
+    },
+    KeySystem = false, -- ❌ отключаем key system
+})
 
--- Основное окно
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 400, 0, 250)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
-mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-mainFrame.Active = true
-mainFrame.Draggable = true -- ✅ Можно таскать
-mainFrame.Parent = screenGui
+-- Создаем вкладку
+local MainTab = Window:CreateTab("Main", 4483362458) -- иконка можно сменить на свою
 
--- Закругленные углы
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 12)
-mainCorner.Parent = mainFrame
+-- Добавляем кнопки
+MainTab:CreateButton({
+    Name = "💨 WalkSpeed +50",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
+    end,
+})
 
--- Заголовок
-local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 40)
-titleBar.Position = UDim2.new(0, 0, 0, 0)
-titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleBar.Parent = mainFrame
+MainTab:CreateButton({
+    Name = "🔥 JumpPower +100",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 100
+    end,
+})
 
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 12)
-titleCorner.Parent = titleBar
+MainTab:CreateButton({
+    Name = "♻️ Reset Stats",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+    end,
+})
 
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -50, 1, 0)
-titleLabel.Position = UDim2.new(0, 10, 0, 0)
-titleLabel.Text = "♻️ aMain"
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 20
-titleLabel.BackgroundTransparency = 1
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Parent = titleBar
-
--- Кнопка закрытия
-local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 35, 0, 35)
-closeButton.Position = UDim2.new(1, -40, 0, 2)
-closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.Font = Enum.Font.GothamBold
-closeButton.TextSize = 18
-closeButton.BorderSizePixel = 0
-closeButton.Parent = titleBar
-
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(1, 0)
-closeCorner.Parent = closeButton
-
--- Закрытие GUI
-closeButton.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-end)
-
--- Пример кнопки
-local exampleButton = Instance.new("TextButton")
-exampleButton.Size = UDim2.new(0, 150, 0, 40)
-exampleButton.Position = UDim2.new(0.5, -75, 0, 60)
-exampleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-exampleButton.Text = "🔥 Example Button"
-exampleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-exampleButton.Font = Enum.Font.GothamBold
-exampleButton.TextSize = 16
-exampleButton.Parent = mainFrame
-
-local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 8)
-buttonCorner.Parent = exampleButton
-
--- Действие кнопки
-exampleButton.MouseButton1Click:Connect(function()
-    print("Example button clicked!")
-end)
+-- Добавляем Toggle
+MainTab:CreateToggle({
+    Name = "👻 NoClip",
+    CurrentValue = false,
+    Callback = function(Value)
+        noclip = Value
+        game:GetService("RunService").Stepped:Connect(function()
+            if noclip then
+                for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end,
+})
