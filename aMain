@@ -31,7 +31,7 @@ titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = titleBar
 
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -90, 1, 0)
+titleLabel.Size = UDim2.new(1, -50, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.Text = "♻️ aMain"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -61,7 +61,7 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- 🟦 Кнопка сворачивания (▾ / ▸) в стиле squircle
+-- 🟦 Кнопка сворачивания
 local collapseButton = Instance.new("TextButton")
 collapseButton.Size = UDim2.new(0, 35, 0, 35)
 collapseButton.Position = UDim2.new(1, -80, 0, 2)
@@ -74,7 +74,7 @@ collapseButton.BorderSizePixel = 0
 collapseButton.Parent = titleBar
 
 local collapseCorner = Instance.new("UICorner")
-collapseCorner.CornerRadius = UDim.new(0.5, 0) -- squircle стиль
+collapseCorner.CornerRadius = UDim.new(0.5, 0) -- squircle
 collapseCorner.Parent = collapseButton
 
 -- Левая панель (вкладки)
@@ -99,57 +99,55 @@ local contentCorner = Instance.new("UICorner")
 contentCorner.CornerRadius = UDim.new(0, 8)
 contentCorner.Parent = contentFrame
 
--- Логика сворачивания
+-- Анимация сворачивания
+local TweenService = game:GetService("TweenService")
 local collapsed = false
+
 collapseButton.MouseButton1Click:Connect(function()
     collapsed = not collapsed
     if collapsed then
-        contentFrame.Visible = false
+        -- Скрываем контент и заголовок
         tabsFrame.Visible = false
-        mainFrame.Size = UDim2.new(0, 450, 0, 40) -- свернуто
-        collapseButton.Text = "▸"
-    else
-        contentFrame.Visible = true
-        tabsFrame.Visible = true
-        mainFrame.Size = UDim2.new(0, 450, 0, 300) -- развернуто
-        collapseButton.Text = "▾"
+        contentFrame.Visible = false
+        titleLabel.Visible = false
+        closeButton.Visible = false
+        collapseButton.Visible = false
+
+        -- Плавно уменьшаем окно
+        local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+            {Size = UDim2.new(0, 50, 0, 50)})
+        tween:Play()
+
+        -- Добавляем кнопку ♻️ для возврата
+        tween.Completed:Connect(function()
+            local restoreButton = Instance.new("TextButton")
+            restoreButton.Size = UDim2.new(1, 0, 1, 0)
+            restoreButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            restoreButton.Text = "♻️"
+            restoreButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            restoreButton.Font = Enum.Font.GothamBold
+            restoreButton.TextSize = 24
+            restoreButton.Parent = mainFrame
+
+            local restoreCorner = Instance.new("UICorner")
+            restoreCorner.CornerRadius = UDim.new(0.5, 0)
+            restoreCorner.Parent = restoreButton
+
+            restoreButton.MouseButton1Click:Connect(function()
+                restoreButton:Destroy()
+                -- Плавно разворачиваем обратно
+                local expandTween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+                    {Size = UDim2.new(0, 450, 0, 300)})
+                expandTween:Play()
+
+                expandTween.Completed:Connect(function()
+                    tabsFrame.Visible = true
+                    contentFrame.Visible = true
+                    titleLabel.Visible = true
+                    closeButton.Visible = true
+                    collapseButton.Visible = true
+                end)
+            end)
+        end)
     end
-end)
-
--- 🏃 Пример вкладки
-local function createTab(name, callback)
-    local tabButton = Instance.new("TextButton")
-    tabButton.Size = UDim2.new(1, -10, 0, 40)
-    tabButton.Position = UDim2.new(0, 5, 0, (#tabsFrame:GetChildren() - 1) * 45)
-    tabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    tabButton.Text = name
-    tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tabButton.Font = Enum.Font.Gotham
-    tabButton.TextSize = 16
-    tabButton.Parent = tabsFrame
-
-    local tabCorner = Instance.new("UICorner")
-    tabCorner.CornerRadius = UDim.new(0, 6)
-    tabCorner.Parent = tabButton
-
-    tabButton.MouseButton1Click:Connect(function()
-        for _, v in pairs(contentFrame:GetChildren()) do
-            if v:IsA("GuiObject") then
-                v:Destroy()
-            end
-        end
-        callback()
-    end)
-end
-
-createTab("🏃 Main", function()
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 50)
-    label.Position = UDim2.new(0, 0, 0, 10)
-    label.BackgroundTransparency = 1
-    label.Text = "Добро пожаловать в aMain!"
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 20
-    label.Parent = contentFrame
 end)
