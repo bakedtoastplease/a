@@ -1,53 +1,50 @@
-local plr = game.Players.LocalPlayer
+local player = game.Players.LocalPlayer
 
 -- Создаем ScreenGui
-local gui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-gui.Name = "RayfieldLikeUI"
-gui.ResetOnSpawn = false
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "aMainUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Создаем основное окно
-local mainFrame = Instance.new("Frame", gui)
-mainFrame.Size = UDim2.new(0, 400, 0, 300)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+-- Основное окно
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 250)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.Active = true
-mainFrame.Draggable = true
+mainFrame.Draggable = true -- ✅ Можно таскать
+mainFrame.Parent = screenGui
 
--- Закругляем углы
-local mainCorner = Instance.new("UICorner", mainFrame)
-mainCorner.CornerRadius = UDim.new(0, 10)
-
--- Тень за окном
-local shadow = Instance.new("ImageLabel", mainFrame)
-shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-shadow.Size = UDim2.new(1, 30, 1, 30)
-shadow.Image = "rbxassetid://1316045217"
-shadow.ImageTransparency = 0.6
-shadow.BackgroundTransparency = 1
-shadow.ZIndex = -1
+-- Закругленные углы
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
 
 -- Заголовок
-local titleBar = Instance.new("Frame", mainFrame)
+local titleBar = Instance.new("Frame")
 titleBar.Size = UDim2.new(1, 0, 0, 40)
-titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+titleBar.Parent = mainFrame
 
-local titleCorner = Instance.new("UICorner", titleBar)
-titleCorner.CornerRadius = UDim.new(0, 10)
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleBar
 
-local titleLabel = Instance.new("TextLabel", titleBar)
+local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -50, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "🌙 Rayfield-Like UI"
+titleLabel.Text = "♻️ aMain"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextSize = 20
+titleLabel.BackgroundTransparency = 1
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = titleBar
 
 -- Кнопка закрытия
-local closeButton = Instance.new("TextButton", titleBar)
+local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0, 35, 0, 35)
 closeButton.Position = UDim2.new(1, -40, 0, 2)
 closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
@@ -56,29 +53,33 @@ closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeButton.Font = Enum.Font.GothamBold
 closeButton.TextSize = 18
 closeButton.BorderSizePixel = 0
+closeButton.Parent = titleBar
 
-local closeCorner = Instance.new("UICorner", closeButton)
+local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(1, 0)
+closeCorner.Parent = closeButton
 
--- Закрытие UI
+-- Закрытие GUI
 closeButton.MouseButton1Click:Connect(function()
-    gui:Destroy()
+    screenGui:Destroy()
 end)
 
 -- Пример кнопки
-local button = Instance.new("TextButton", mainFrame)
-button.Size = UDim2.new(0, 150, 0, 40)
-button.Position = UDim2.new(0.5, -75, 0, 60)
-button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-button.Text = "💥 Example Button"
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.Font = Enum.Font.GothamBold
-button.TextSize = 16
-button.BorderSizePixel = 0
+local exampleButton = Instance.new("TextButton")
+exampleButton.Size = UDim2.new(0, 150, 0, 40)
+exampleButton.Position = UDim2.new(0.5, -75, 0, 60)
+exampleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+exampleButton.Text = "🔥 Example Button"
+exampleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+exampleButton.Font = Enum.Font.GothamBold
+exampleButton.TextSize = 16
+exampleButton.Parent = mainFrame
 
-local btnCorner = Instance.new("UICorner", button)
-btnCorner.CornerRadius = UDim.new(0, 8)
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = exampleButton
 
-button.MouseButton1Click:Connect(function()
+-- Действие кнопки
+exampleButton.MouseButton1Click:Connect(function()
     print("Example button clicked!")
 end)
