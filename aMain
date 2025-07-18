@@ -6,6 +6,9 @@ screenGui.Name = "aMainHub"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
+-- TweenService
+local TweenService = game:GetService("TweenService")
+
 -- Основное окно
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 450, 0, 300)
@@ -31,7 +34,7 @@ titleCorner.CornerRadius = UDim.new(0, 12)
 titleCorner.Parent = titleBar
 
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -50, 1, 0)
+titleLabel.Size = UDim2.new(1, -90, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
 titleLabel.Text = "♻️ aMain"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -61,12 +64,12 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- 🟦 Кнопка сворачивания
+-- 👀 Кнопка сворачивания
 local collapseButton = Instance.new("TextButton")
 collapseButton.Size = UDim2.new(0, 35, 0, 35)
 collapseButton.Position = UDim2.new(1, -80, 0, 2)
 collapseButton.BackgroundColor3 = Color3.fromRGB(50, 50, 200)
-collapseButton.Text = "▾"
+collapseButton.Text = "👀"
 collapseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 collapseButton.Font = Enum.Font.GothamBold
 collapseButton.TextSize = 18
@@ -74,7 +77,7 @@ collapseButton.BorderSizePixel = 0
 collapseButton.Parent = titleBar
 
 local collapseCorner = Instance.new("UICorner")
-collapseCorner.CornerRadius = UDim.new(0.5, 0) -- squircle
+collapseCorner.CornerRadius = UDim.new(0.5, 0) -- squircle стиль
 collapseCorner.Parent = collapseButton
 
 -- Левая панель (вкладки)
@@ -99,8 +102,7 @@ local contentCorner = Instance.new("UICorner")
 contentCorner.CornerRadius = UDim.new(0, 8)
 contentCorner.Parent = contentFrame
 
--- Анимация сворачивания
-local TweenService = game:GetService("TweenService")
+-- Логика сворачивания
 local collapsed = false
 
 collapseButton.MouseButton1Click:Connect(function()
@@ -109,9 +111,7 @@ collapseButton.MouseButton1Click:Connect(function()
         -- Скрываем контент и заголовок
         tabsFrame.Visible = false
         contentFrame.Visible = false
-        titleLabel.Visible = false
-        closeButton.Visible = false
-        collapseButton.Visible = false
+        titleBar.Visible = false
 
         -- Плавно уменьшаем окно
         local tween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
@@ -133,6 +133,10 @@ collapseButton.MouseButton1Click:Connect(function()
             restoreCorner.CornerRadius = UDim.new(0.5, 0)
             restoreCorner.Parent = restoreButton
 
+            -- Делаем кнопку перетаскиваемой
+            restoreButton.Active = true
+            restoreButton.Draggable = true
+
             restoreButton.MouseButton1Click:Connect(function()
                 restoreButton:Destroy()
                 -- Плавно разворачиваем обратно
@@ -143,9 +147,7 @@ collapseButton.MouseButton1Click:Connect(function()
                 expandTween.Completed:Connect(function()
                     tabsFrame.Visible = true
                     contentFrame.Visible = true
-                    titleLabel.Visible = true
-                    closeButton.Visible = true
-                    collapseButton.Visible = true
+                    titleBar.Visible = true
                 end)
             end)
         end)
